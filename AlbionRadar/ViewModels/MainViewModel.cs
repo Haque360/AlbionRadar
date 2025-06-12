@@ -46,7 +46,7 @@ namespace AlbionRadar.ViewModels
             var harvestableHandler = new HarvestableHandler();
 
             var albionDataParser = new AlbionDataParser();
-            _mainProgram = new Program(albionDataParser);
+            _mainProgram = new Program(albionDataParser, _gameStateManager);
 
             albionDataParser.RegisterEventHandler(mobsHandler);
             albionDataParser.RegisterEventHandler(playersHandler);

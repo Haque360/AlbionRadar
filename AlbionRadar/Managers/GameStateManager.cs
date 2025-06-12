@@ -1,4 +1,5 @@
 ﻿using AlbionDataHandlers.Entities;
+using AlbionDataHandlers.Enums;
 using BaseUtils.Logger.Impl;
 using System.Diagnostics;
 
@@ -19,6 +20,9 @@ namespace AlbionRadar.Managers
         private long _previousTimeTicks;
         private float _flashTimeRemaining;
 
+        public TierLevels MinimumTierFilter { get; set; } = TierLevels.Tier1;
+
+
         public float FlashTimeNormalized => _flashTimeRemaining > 0.0f ? _flashTimeRemaining : 0.0f;
 
         public GameStateManager()
@@ -27,6 +31,12 @@ namespace AlbionRadar.Managers
         }
 
         #region State Update Methods  
+
+
+        public GameStateManager(TierLevels minimumTierFilter) : this()
+        {
+            MinimumTierFilter = minimumTierFilter;
+        }
 
         /// <summary>  
         /// Updates the player's state using network data.  
@@ -49,7 +59,8 @@ namespace AlbionRadar.Managers
             {
                 try
                 {
-                    var incomingIds = new HashSet<int>(incomingMobs.Select(m => m.Id));
+                    var filteredMobs = incomingMobs.Where(it => it.Tier >= MinimumTierFilter);
+                    var incomingIds = new HashSet<int>(filteredMobs.Select(m => m.Id));
                     var idsToRemove = _mobs.Keys.Where(id => !incomingIds.Contains(id)).ToList();
 
                     foreach (var id in idsToRemove)
@@ -57,7 +68,7 @@ namespace AlbionRadar.Managers
                         _mobs.Remove(id);
                     }
 
-                    foreach (var mob in incomingMobs)
+                    foreach (var mob in filteredMobs)
                     {
                         if (_mobs.TryGetValue(mob.Id, out var existingMob))
                         {
@@ -119,6 +130,21 @@ namespace AlbionRadar.Managers
             }
         }
 
+
+        public void UpdateTierFilter(TierLevels newTierFilter)
+        {
+            lock (_stateLock)
+            {
+                if (MinimumTierFilter != newTierFilter)
+                {
+                    DLog.I($"Tier filter changed from {MinimumTierFilter} to {newTierFilter}");
+                    MinimumTierFilter = newTierFilter;
+
+                    // Optionally, you could clear existing mobs that no longer meet the criteria
+                    // or trigger a re-evaluation of existing mobs
+                }
+            }
+        }
         #endregion
 
         #region State Accessor Methods  

@@ -56,6 +56,7 @@ public static class PacketDeviceSelector
         var deviceSelectionDialog = new PacketDeviceSelectorDialog();
         bool? dialogResult = deviceSelectionDialog.ShowDialog(); // ShowDialog is blocking.
 
+
         // Return the selected device if the user confirms their selection.
         if (dialogResult == true)
         {
